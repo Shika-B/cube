@@ -121,7 +121,7 @@ fn main() {
     |/       |/
     p4 ----- p3
 
-    */
+
     let mut cube_skeleton = Skeleton {
         vertices: vec![
             (-0.5, 0.5, -0.5),
@@ -148,11 +148,30 @@ fn main() {
             (0, 3),
         ],
     };
+    */
+    let mut pyramid_skeleton = Skeleton {
+        vertices: vec![
+            (0.0, 1.0, 0.0),
+            (-0.5, -0.5, -0.5),
+            (0.5, -0.5, -0.5),
+            (0.5, -0.5, 0.5),
+            (-0.5, -0.5, 0.5),
+        ],
+        edges: vec![
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 1),
+        ],
+    };
     loop {
-        cube_skeleton.rotate_x(0.005);
-        cube_skeleton.rotate_z(0.002);
+        pyramid_skeleton.rotate_x(0.005);
         buffer.clear();
-        buffer.draw_skeleton(&cube_skeleton);
+        buffer.draw_skeleton(&pyramid_skeleton);
         buffer.render_buffer();
     }
 }
