@@ -40,12 +40,14 @@ impl Buffer {
                 '#';
         }
     }
+    /*
     pub fn draw_polygon(&mut self, vertices: Vec<Coord2D>) {
         for i in 0..vertices.len() - 1 {
             self.draw_line(vertices[i], vertices[i + 1]);
         }
         self.draw_line(*vertices.last().unwrap(), vertices[0]);
-    }
+    }*/
+
     pub fn point2d_to_coord2d(&self, (x, y): Point2D) -> Coord2D {
         let rowsf64 = self.rows as f64;
         let columnsf64 = self.columns as f64;
@@ -54,74 +56,24 @@ impl Buffer {
             (y * rowsf64 / 2.0 + rowsf64 / 2.0).round() as isize,
         )
     }
-    pub fn draw_cube(&mut self, cube: &Cube) {
-        let vertices = [
-            self.point2d_to_coord2d((
-                cube.vertices[0].0 / (cube.vertices[0].2 + 2.0),
-                cube.vertices[0].1 / (cube.vertices[0].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[1].0 / (cube.vertices[1].2 + 2.0),
-                cube.vertices[1].1 / (cube.vertices[1].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[2].0 / (cube.vertices[2].2 + 2.0),
-                cube.vertices[2].1 / (cube.vertices[2].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[3].0 / (cube.vertices[3].2 + 2.0),
-                cube.vertices[3].1 / (cube.vertices[3].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[4].0 / (cube.vertices[4].2 + 2.0),
-                cube.vertices[4].1 / (cube.vertices[4].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[5].0 / (cube.vertices[5].2 + 2.0),
-                cube.vertices[5].1 / (cube.vertices[5].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[6].0 / (cube.vertices[6].2 + 2.0),
-                cube.vertices[6].1 / (cube.vertices[6].2 + 2.0),
-            )),
-            self.point2d_to_coord2d((
-                cube.vertices[7].0 / (cube.vertices[7].2 + 2.0),
-                cube.vertices[7].1 / (cube.vertices[7].2 + 2.0),
-            )),
-        ];
-        self.draw_line(vertices[4], vertices[5]);
-        self.draw_line(vertices[5], vertices[6]);
-        self.draw_line(vertices[6], vertices[7]);
-        self.draw_line(vertices[4], vertices[7]);
-
-        self.draw_line(vertices[2], vertices[7]);
-        self.draw_line(vertices[3], vertices[4]);
-        self.draw_line(vertices[0], vertices[5]);
-        self.draw_line(vertices[1], vertices[6]);
-
-        self.draw_line(vertices[0], vertices[1]);
-        self.draw_line(vertices[1], vertices[2]);
-        self.draw_line(vertices[2], vertices[3]);
-        self.draw_line(vertices[0], vertices[3]);
+    pub fn draw_skeleton(&mut self, skeleton: &Skeleton) {
+        let vertices = skeleton
+            .vertices
+            .iter()
+            .map(|(x, y, z)| self.point2d_to_coord2d((x / (z + 2.0), y / (z + 2.0))))
+            .collect::<Vec<Coord2D>>();
+        for (start, end) in &skeleton.edges {
+            self.draw_line(vertices[*start], vertices[*end])
+        }
     }
 }
 
-/*
-  p6 ----- p7
-  /|       /
- / |      /|
-p1 ----- p2|
-|  p5----|-p8
-| /      | /
-|/       |/
-p4 ----- p3
-
-*/
-pub struct Cube {
-    pub vertices: [Point3D; 8],
+pub struct Skeleton {
+    pub vertices: Vec<Point3D>,
+    pub edges: Vec<(usize, usize)>,
 }
 
-impl Cube {
+impl Skeleton {
     pub fn rotate_x(&mut self, angle: f64) {
         let rotation_matrix = Matrix3::from_angle_x(Rad(angle));
         for point in self.vertices.iter_mut() {
@@ -157,8 +109,20 @@ fn main() {
         rows,
         ever_rendered: false,
     };
-    let mut cube = Cube {
-        vertices: [
+
+    /*
+      p6 ----- p7
+      /|       /
+     / |      /|
+    p1 ----- p2|
+    |  p5----|-p8
+    | /      | /
+    |/       |/
+    p4 ----- p3
+
+    */
+    let mut cube_skeleton = Skeleton {
+        vertices: vec![
             (-0.5, 0.5, -0.5),
             (0.5, 0.5, -0.5),
             (0.5, -0.5, -0.5),
@@ -168,13 +132,26 @@ fn main() {
             (0.5, 0.5, 0.5),
             (0.5, -0.5, 0.5),
         ],
+        edges: vec![
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (4, 7),
+            (2, 7),
+            (3, 4),
+            (0, 5),
+            (1, 6),
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (0, 3),
+        ],
     };
-    buffer.draw_cube(&cube);
     loop {
-        cube.rotate_x(0.005);
-        cube.rotate_z(0.002);
+        cube_skeleton.rotate_x(0.005);
+        cube_skeleton.rotate_z(0.002);
         buffer.clear();
-        buffer.draw_cube(&cube);
+        buffer.draw_skeleton(&cube_skeleton);
         buffer.render_buffer();
     }
 }
