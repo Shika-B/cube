@@ -111,6 +111,7 @@ fn main() {
     };
 
     /*
+    Vertices are ordered like this:
       p6 ----- p7
       /|       /
      / |      /|
